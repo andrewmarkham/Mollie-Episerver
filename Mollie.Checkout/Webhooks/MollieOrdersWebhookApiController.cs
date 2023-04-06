@@ -1,5 +1,6 @@
 ﻿using EPiServer.Commerce.Order;
 using EPiServer.Logging;
+using Microsoft.AspNetCore.Mvc;
 using Mollie.Api.Client;
 using Mollie.Api.Models.Payment.Response;
 using Mollie.Checkout.Models;
@@ -8,12 +9,14 @@ using System;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web.Http;
+
 
 namespace Mollie.Checkout.Webhooks
 {
-    [RoutePrefix(Constants.Webhooks.MollieOrdersWebhookUrl)]
-    public class MollieOrdersWebhookApiController : ApiController
+    
+    [ApiController]
+    [Route(Constants.Webhooks.MollieOrdersWebhookUrl)]
+    public class MollieOrdersWebhookApiController : ControllerBase
     {
         private readonly ILogger _log = LogManager.GetLogger(typeof(MollieOrdersWebhookApiController));
         private readonly ICheckoutConfigurationLoader _checkoutConfigurationLoader;
@@ -39,18 +42,18 @@ namespace Mollie.Checkout.Webhooks
             _httpClient = httpClient;
         }
 
-        [HttpGet]
-        [Route("isonline")]
+        [Microsoft.AspNetCore.Mvc.HttpGet]
+        [Microsoft.AspNetCore.Mvc.Route("isonline")]
         public string IsOnline()
         {
             return "Orders Webhook is Online!";
         }
 
-        [HttpPost]
-        [Route("{languageId}")]
-        public async Task<IHttpActionResult> IndexAsync(string languageId)
+        [Microsoft.AspNetCore.Mvc.HttpPost]
+        [Microsoft.AspNetCore.Mvc.Route("{languageId}")]
+        public async Task<IActionResult> IndexAsync(string languageId)
         {
-            var jsonResult = Request.Content.ReadAsStringAsync().Result;
+            var jsonResult = ""; //Request.Content.ReadAsStringAsync().Result;
 
             if (string.IsNullOrWhiteSpace(jsonResult))
             {

@@ -13,30 +13,27 @@ namespace Mollie.Checkout.MollieClients
     {
         public Task<PaymentResponse> CreatePaymentAsync(
             PaymentRequest paymentRequest, 
-            string apiKey, 
-            HttpClient httpClient)
+            string apiKey)
         {
-            var paymentClient = new PaymentClient(apiKey, httpClient);
+            var paymentClient = new PaymentClient(apiKey);
 
             return paymentClient.CreatePaymentAsync(paymentRequest);
         }
 
         public Task<OrderResponse> CreateOrderAsync(
             OrderRequest orderRequest, 
-            string apiKey, 
-            HttpClient httpClient)
+            string apiKey)
         {
-            var orderClient = new OrderClient(apiKey, httpClient);
+            var orderClient = new OrderClient(apiKey);
 
             return orderClient.CreateOrderAsync(orderRequest);
         }
 
         public Task<OrderResponse> GetOrderAsync(
             string orderId, 
-            string apiKey, 
-            HttpClient httpClient)
+            string apiKey)
         {
-            var orderClient = new OrderClient(apiKey, httpClient);
+            var orderClient = new OrderClient(apiKey);
             return orderClient.GetOrderAsync(orderId, true);
         }
     }

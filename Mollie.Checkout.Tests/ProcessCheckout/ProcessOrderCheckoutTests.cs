@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
 using EPiServer.Commerce.Order;
 using EPiServer.Commerce.Storage;
 using EPiServer.Logging;
@@ -14,6 +13,7 @@ using FakeItEasy;
 using Mediachase.Commerce;
 using Mediachase.Commerce.Customers;
 using Mediachase.Commerce.Markets;
+using Microsoft.AspNetCore.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mollie.Api.Models.Order;
 using Mollie.Api.Models.Url;
@@ -35,9 +35,9 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
         private ICheckoutMetaDataFactory _checkoutMetaDataFactory;
         private IOrderRepository _orderRepository;
         private IMarketService _marketService;
-        private ServiceAccessor<HttpContextBase> _httpContextAccessor;
         private IProductImageUrlFinder _productImageUrlFinder;
         private IProductUrlGetter _productUrlGetter;
+        private IHttpContextAccessor _httpContextAccessor;
         private HttpClient _httpClient;
         private IOrderNoteHelper _orderNoteHelper;
         private IMollieOrderClient _mollieOrderClient;
@@ -175,8 +175,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
                     x.BillingAddress.Email == BillingAddressEmail &&
                     x.BillingAddress.Phone == BillingAddressDaytimePhoneNumber &&
                     x.BillingAddress.City == BillingAddressCity),
-                A<string>.Ignored,
-                A<HttpClient>.Ignored))
+                A<string>.Ignored))
             .MustHaveHappened();
         }
 
@@ -199,8 +198,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
                         x.ShippingAddress.Email == ShippingAddressEmail &&
                         x.ShippingAddress.Phone == ShippingAddressDaytimePhoneNumber &&
                         x.ShippingAddress.City == ShippingAddressCity),
-                    A<string>.Ignored,
-                    A<HttpClient>.Ignored))
+                    A<string>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -216,8 +214,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             A.CallTo(() => _mollieOrderClient.CreateOrderAsync(
                     A<OrderRequest>.That.Matches(x =>
                         x.Amount == Amount),
-                    A<string>.Ignored,
-                    A<HttpClient>.Ignored))
+                    A<string>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -233,8 +230,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             A.CallTo(() => _mollieOrderClient.CreateOrderAsync(
                     A<OrderRequest>.That.Matches(x =>
                         x.Method == MolliePaymentMethod),
-                    A<string>.Ignored,
-                    A<HttpClient>.Ignored))
+                    A<string>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -252,8 +248,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
                         x.Metadata.Contains(OrderNumber) &&
                         x.Metadata.Contains(CartId.ToString()) &&
                         x.Metadata.Contains(VersionStrings)),
-                    A<string>.Ignored,
-                    A<HttpClient>.Ignored))
+                    A<string>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -269,8 +264,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             A.CallTo(() => _mollieOrderClient.CreateOrderAsync(
                     A<OrderRequest>.That.Matches(x =>
                         x.ConsumerDateOfBirth == _customerContactBirthDate),
-                    A<string>.Ignored,
-                    A<HttpClient>.Ignored))
+                    A<string>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -288,8 +282,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             A.CallTo(() => _mollieOrderClient.CreateOrderAsync(
                 A<OrderRequest>.That.Matches(x =>
                     x.Locale == locale),
-                A<string>.Ignored,
-                A<HttpClient>.Ignored))
+                A<string>.Ignored))
             .MustHaveHappened();
         }
 
@@ -305,8 +298,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             A.CallTo(() => _mollieOrderClient.CreateOrderAsync(
                     A<OrderRequest>.That.Matches(x =>
                         x.OrderNumber == OrderNumber),
-                    A<string>.Ignored,
-                    A<HttpClient>.Ignored))
+                    A<string>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -324,8 +316,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             A.CallTo(() => _mollieOrderClient.CreateOrderAsync(
                     A<OrderRequest>.That.Matches(x =>
                         x.RedirectUrl == redirectUrl),
-                    A<string>.Ignored,
-                    A<HttpClient>.Ignored))
+                    A<string>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -341,8 +332,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             A.CallTo(() => _mollieOrderClient.CreateOrderAsync(
                     A<OrderRequest>.That.Matches(x =>
                         x.WebhookUrl.Contains(WebShopUrl)),
-                    A<string>.Ignored,
-                    A<HttpClient>.Ignored))
+                    A<string>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -360,8 +350,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             A.CallTo(() => _mollieOrderClient.CreateOrderAsync(
                     A<OrderRequest>.That.Matches(x =>
                         x.ExpiresAt == expiresAtTest),
-                    A<string>.Ignored,
-                    A<HttpClient>.Ignored))
+                    A<string>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -381,8 +370,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
                         x.Lines.First(t => t.Type == "physical").Metadata.Contains(OrderNumber) &&
                         x.Lines.First(t => t.Type == "physical").Metadata.Contains(LineItemCode) &&
                         x.Lines.First(t => t.Type == "physical").Quantity == LineItemQuantity),
-                    A<string>.Ignored,
-                    A<HttpClient>.Ignored))
+                    A<string>.Ignored))
                 .MustHaveHappened();
         }
 
@@ -393,7 +381,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             _checkoutConfigurationLoader = A.Fake<ICheckoutConfigurationLoader>();
             _checkoutMetaDataFactory = A.Fake<ICheckoutMetaDataFactory>();
             _orderRepository = A.Fake<IOrderRepository>();
-            _httpContextAccessor = A.Fake<ServiceAccessor<HttpContextBase>>();
+            _httpContextAccessor = A.Fake<IHttpContextAccessor>();
             _httpClient = A.Fake<HttpClient>();
             _orderNoteHelper = A.Fake<IOrderNoteHelper>();
             _mollieOrderClient = A.Fake<IMollieOrderClient>();
@@ -403,8 +391,8 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             _currentCustomerContactGetter = A.Fake<ICurrentCustomerContactGetter>();
             _lineItemCalculations = A.Fake<ILineItemCalculations>();
 
-            var httpContext = new HttpContext(new HttpRequest(null, WebShopUrl, null), new HttpResponse(null));
-            A.CallTo(() => _httpContextAccessor.Invoke()).Returns(new HttpContextWrapper(httpContext));
+            var httpContext = A.Fake<HttpContext>();
+            A.CallTo(() => _httpContextAccessor.HttpContext).Returns(httpContext);
 
             A.CallTo(() => _checkoutMetaDataFactory.Create(A<IOrderGroup>._, A<IPayment>._, A<CheckoutConfiguration>._))
                 .Returns(new CheckoutMetaDataModel
@@ -415,7 +403,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
                 });
 
             A.CallTo(() =>
-                    _mollieOrderClient.CreateOrderAsync(A<OrderRequest>._, A<string>.Ignored, A<HttpClient>._))
+                    _mollieOrderClient.CreateOrderAsync(A<OrderRequest>._, A<string>.Ignored))
                 .Returns(Task.FromResult(new OrderResponse
                 {
                     Id = PaymentResponseId,
@@ -424,7 +412,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
 
 
             A.CallTo(() =>
-                    _mollieOrderClient.GetOrderAsync(A<string>.Ignored, A<string>.Ignored, A<HttpClient>._))
+                    _mollieOrderClient.GetOrderAsync(A<string>.Ignored, A<string>.Ignored))
                 .Returns(Task.FromResult(new OrderResponse
                 {
                     Id = PaymentResponseId,
@@ -445,7 +433,6 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
                 _httpContextAccessor,
                 _productImageUrlFinder,
                 _productUrlGetter,
-                _httpClient,
                 _orderNoteHelper,
                 _mollieOrderClient,
                 _currentCustomerContactGetter,

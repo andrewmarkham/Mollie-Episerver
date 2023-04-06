@@ -22,7 +22,9 @@ namespace Mollie.Checkout.Services
                 throw new ArgumentNullException(nameof(asssembly));
             }
 
-            var assemblyFolderUri = new Uri(Path.GetDirectoryName(Assembly.GetExecutingAssembly().CodeBase));
+            var location = Assembly.GetExecutingAssembly().Location;
+            var pathName = Path.GetDirectoryName(location) ?? string.Empty;
+            var assemblyFolderUri = new Uri(pathName);
 
             AssemblyName assemblyName = AssemblyName.GetAssemblyName($"{assemblyFolderUri.LocalPath}\\{asssembly}");
 

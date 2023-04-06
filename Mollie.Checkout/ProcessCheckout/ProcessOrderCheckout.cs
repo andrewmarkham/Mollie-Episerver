@@ -8,7 +8,6 @@ using Mollie.Checkout.ProcessCheckout.Interfaces;
 using EPiServer.Logging;
 using EPiServer.ServiceLocation;
 using Mollie.Checkout.Services;
-using System.Web;
 using EPiServer.Security;
 using Mediachase.Commerce.Markets;
 using Mediachase.Commerce.Orders.Managers;
@@ -26,6 +25,7 @@ using Mollie.Checkout.MollieApi;
 using Mollie.Checkout.Helpers;
 using Mollie.Checkout.MollieClients;
 using System.Runtime.ExceptionServices;
+using Microsoft.AspNetCore.Http;
 
 namespace Mollie.Checkout.ProcessCheckout
 {
@@ -36,10 +36,10 @@ namespace Mollie.Checkout.ProcessCheckout
         private readonly ICheckoutMetaDataFactory _checkoutMetaDataFactory;
         private readonly IOrderRepository _orderRepository;
         private readonly IMarketService _marketService;
-        private readonly ServiceAccessor<HttpContextBase> _httpContextAccessor;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IProductImageUrlFinder _productImageUrlFinder;
         private readonly IProductUrlGetter _productUrlGetter;
-        private readonly HttpClient _httpClient;
+        //private readonly HttpClient _httpClient;
         private readonly IOrderNoteHelper _orderNoteHelper;
         private readonly IMollieOrderClient _mollieOrderClient;
         private readonly ICurrentCustomerContactGetter _currentCustomerContactGetter;
@@ -54,8 +54,8 @@ namespace Mollie.Checkout.ProcessCheckout
             _marketService = ServiceLocator.Current.GetInstance<IMarketService>();
             _productImageUrlFinder = ServiceLocator.Current.GetInstance<IProductImageUrlFinder>();
             _productUrlGetter = ServiceLocator.Current.GetInstance<IProductUrlGetter>();
-            _httpContextAccessor = ServiceLocator.Current.GetInstance<ServiceAccessor<HttpContextBase>>();
-            _httpClient = ServiceLocator.Current.GetInstance<HttpClient>();
+            _httpContextAccessor = ServiceLocator.Current.GetInstance<IHttpContextAccessor>();
+            //_httpClient = ServiceLocator.Current.GetInstance<HttpClient>();
             _orderNoteHelper = ServiceLocator.Current.GetInstance<IOrderNoteHelper>();
             _mollieOrderClient = ServiceLocator.Current.GetInstance<IMollieOrderClient>();
             _currentCustomerContactGetter = ServiceLocator.Current.GetInstance<ICurrentCustomerContactGetter>();
@@ -68,10 +68,10 @@ namespace Mollie.Checkout.ProcessCheckout
             ICheckoutMetaDataFactory checkoutMetaDataFactory,
             IOrderRepository orderRepository,
             IMarketService marketService,
-            ServiceAccessor<HttpContextBase> httpContextAccessor,
+            IHttpContextAccessor httpContextAccessor,
             IProductImageUrlFinder productImageUrlFinder,
             IProductUrlGetter productUrlGetter,
-            HttpClient httpClient,
+            //HttpClient httpClient,
             IOrderNoteHelper orderNoteHelper,
             IMollieOrderClient mollieOrderClient,
             ICurrentCustomerContactGetter currentCustomerContactGetter,
@@ -85,7 +85,7 @@ namespace Mollie.Checkout.ProcessCheckout
             _httpContextAccessor = httpContextAccessor;
             _productImageUrlFinder = productImageUrlFinder;
             _productUrlGetter = productUrlGetter;
-            _httpClient = httpClient;
+            //_httpClient = httpClient;
             _orderNoteHelper = orderNoteHelper;
             _mollieOrderClient = mollieOrderClient;
             _currentCustomerContactGetter = currentCustomerContactGetter;
@@ -108,9 +108,9 @@ namespace Mollie.Checkout.ProcessCheckout
                 selectedMethod = payment.Properties[Constants.OtherPaymentFields.MolliePaymentMethod] as string;
             }
             
-            var request = _httpContextAccessor().Request;
+            var request = _httpContextAccessor?.HttpContext?.Request;
 
-            var baseUrl = $"{request.Url?.Scheme}://{request.Url?.Authority}";
+            var baseUrl = $"{request.Scheme}://{request.Host.Value}";
 
             var proxyUrl = ConfigurationManager.AppSettings["mollie:webhook.proxyurl"];
 
@@ -214,7 +214,7 @@ namespace Mollie.Checkout.ProcessCheckout
 
             try
             {
-                createOrderResponse = _mollieOrderClient.CreateOrderAsync(orderRequest, checkoutConfiguration.ApiKey, _httpClient)
+                createOrderResponse = _mollieOrderClient.CreateOrderAsync(orderRequest, checkoutConfiguration.ApiKey)
                     .GetAwaiter().GetResult();
             }
             catch (Exception e)
@@ -228,7 +228,7 @@ namespace Mollie.Checkout.ProcessCheckout
 
             try
             {
-                getOrderResponse = _mollieOrderClient.GetOrderAsync(createOrderResponse?.Id, checkoutConfiguration.ApiKey, _httpClient)
+                getOrderResponse = _mollieOrderClient.GetOrderAsync(createOrderResponse?.Id, checkoutConfiguration.ApiKey)
                     .GetAwaiter().GetResult();
             }
             catch (Exception e)

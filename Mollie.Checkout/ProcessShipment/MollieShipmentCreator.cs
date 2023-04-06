@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Web.Helpers;
 using EPiServer.Commerce.Order;
 using EPiServer.Logging;
 using EPiServer.ServiceLocation;
@@ -97,7 +96,7 @@ namespace Mollie.Checkout.ProcessShipment
                     continue;
                 }
 
-                var metadata = Json.Decode(mollieOrderLine.Metadata);
+                var metadata = System.Text.Json.JsonSerializer.Deserialize<dynamic>(mollieOrderLine.Metadata);
                 string orderNumber = metadata.order_id;
                 string code = metadata.line_code;
 
@@ -139,5 +138,6 @@ namespace Mollie.Checkout.ProcessShipment
                 }
             }
         }
+
     }
 }

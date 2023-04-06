@@ -14,11 +14,11 @@ namespace Mollie.Checkout.ProcessCheckout.Helpers
     public class ProductUrlGetter : IProductUrlGetter
     {
         private readonly IRelationRepository _relationRepository;
-        private readonly UrlResolver _urlResolver;
+        private readonly IUrlResolver _urlResolver;
 
         public ProductUrlGetter(
             IRelationRepository relationRepository,
-            UrlResolver urlResolver)
+            IUrlResolver urlResolver)
         {
             _relationRepository = relationRepository;
             _urlResolver = urlResolver;

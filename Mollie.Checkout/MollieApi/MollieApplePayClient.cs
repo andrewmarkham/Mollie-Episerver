@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
 using EPiServer.ServiceLocation;
+using Microsoft.AspNetCore.Http;
 using Mollie.Api.Client;
 using Mollie.Checkout.Helpers;
 using Newtonsoft.Json;
@@ -11,23 +11,23 @@ namespace Mollie.Checkout.MollieApi
 {
     public class MollieApplePayClient : BaseMollieClient
     {
-        private readonly ServiceAccessor<HttpContextBase> _httpContextAccessor;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public MollieApplePayClient(string apiKey, HttpClient httpClient = null)
-            : base(apiKey, httpClient)
+        public MollieApplePayClient(string apiKey, IHttpContextAccessor httpContextAccessor)
+            : base(apiKey)
         {
 
-            _httpContextAccessor = ServiceLocator.Current.GetInstance<ServiceAccessor<HttpContextBase>>();
+            _httpContextAccessor = httpContextAccessor;
         }
 
         public ReponseValidateMerchant ValidateMerchant(string validationUrl)
         {
-            var request = _httpContextAccessor().Request;
+            var request = _httpContextAccessor?.HttpContext?.Request;
 
             var data = new Dictionary<string, string>
             {
                 { "validationUrl", validationUrl },
-                { "domain", request.Url?.Authority }
+                { "domain", request.Host.Host }
             };
             
             var response = AsyncHelper.RunSync(() =>

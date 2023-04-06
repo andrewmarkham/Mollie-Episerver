@@ -1,5 +1,6 @@
 ﻿using EPiServer.Commerce.Order;
 using EPiServer.Logging;
+using Microsoft.AspNetCore.Mvc;
 using Mollie.Api.Client;
 using Mollie.Api.Models.Payment.Response;
 using Mollie.Checkout.Models;
@@ -8,12 +9,13 @@ using System;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.Web.Http;
+
 
 namespace Mollie.Checkout.Webhooks
 {
-    [RoutePrefix(Constants.Webhooks.MolliePaymentsWebhookUrl)]
-    public class MolliePaymentsWebhookApiController : ApiController
+    [ApiController]
+    [Route(Constants.Webhooks.MolliePaymentsWebhookUrl)]
+    public class MolliePaymentsWebhookApiController : ControllerBase
     {
         private readonly ILogger _log = LogManager.GetLogger(typeof(MolliePaymentsWebhookApiController));
         private readonly ICheckoutConfigurationLoader _checkoutConfigurationLoader;
@@ -38,16 +40,16 @@ namespace Mollie.Checkout.Webhooks
 
         [HttpGet]
         [Route("isonline")]
-        public string IsOnline()
+        public IActionResult IsOnline()
         {
-            return "Payments Webhook is Online!";
+            return Ok("Payments Webhook is Online!");
         }
 
         [HttpPost]
         [Route("{languageId}")]
-        public async Task<IHttpActionResult> IndexAsync(string languageId)
+        public async Task<IActionResult> IndexAsync(string languageId)
         {
-            var jsonResult = Request.Content.ReadAsStringAsync().Result;
+            var jsonResult = "";//await this.Request.BodyReader.ReadAsync(); // Request.Content.ReadAsStringAsync().Result;
 
             if(string.IsNullOrWhiteSpace(jsonResult))
             {

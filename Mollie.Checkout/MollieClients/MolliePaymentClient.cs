@@ -12,10 +12,9 @@ namespace Mollie.Checkout.MollieClients
     {
         public Task<PaymentResponse> CreatePaymentAsync(
             PaymentRequest paymentRequest, 
-            string apiKey, 
-            HttpClient httpClient)
+            string apiKey)
         {
-            var paymentClient = new PaymentClient(apiKey, httpClient);
+            var paymentClient = new PaymentClient(apiKey,null /*httpClient)*/);
 
             return paymentClient.CreatePaymentAsync(paymentRequest);
         }

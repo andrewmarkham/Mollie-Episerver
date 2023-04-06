@@ -14,11 +14,11 @@ namespace Mollie.Checkout.ProcessCheckout.Helpers
     [ServiceConfiguration(typeof(IProductImageUrlFinder))]
     public class ProductImageUrlFinder : IProductImageUrlFinder
     {
-        private readonly UrlResolver _urlResolver;
+        private readonly IUrlResolver _urlResolver;
         private readonly IContentLoader _contentLoader;
 
         public ProductImageUrlFinder(
-            UrlResolver urlResolver,
+            IUrlResolver urlResolver,
             IContentLoader contentLoader)
         {
             _urlResolver = urlResolver;
@@ -40,7 +40,8 @@ namespace Mollie.Checkout.ProcessCheckout.Helpers
                 }
 
                 var type = "Image";
-                var url = _urlResolver.GetUrl(media.AssetLink, null, new VirtualPathArguments { ContextMode = ContextMode.Default });
+                //var url = _urlResolver.GetUrl(media.AssetLink, null, new VirtualPathArguments { ContextMode = ContextMode.Default });
+                var url = _urlResolver.GetUrl(media.AssetLink);
                 if (contentMedia is IContentVideo)
                 {
                     type = "Video";
@@ -55,7 +56,7 @@ namespace Mollie.Checkout.ProcessCheckout.Helpers
                 return SiteDefinition.Current.SiteUrl.ToString();
             }
 
-            var absoluteUrl = new Uri(SiteDefinition.Current.SiteUrl, productImageUrl.Value);
+            var absoluteUrl = new Uri(SiteDefinition.Current.SiteUrl,productImageUrl.Value);
 
             return absoluteUrl.ToString();
         }

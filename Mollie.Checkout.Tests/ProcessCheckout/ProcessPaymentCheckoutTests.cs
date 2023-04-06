@@ -3,13 +3,13 @@ using System.Collections;
 using System.Globalization;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Web;
 using EPiServer.Commerce.Order;
 using EPiServer.Commerce.Storage;
 using EPiServer.Logging;
 using EPiServer.ServiceLocation;
 using FakeItEasy;
 using Mediachase.Commerce;
+using Microsoft.AspNetCore.Http;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mollie.Api.Models.Payment.Request;
 using Mollie.Api.Models.Payment.Response;
@@ -30,8 +30,8 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
         private IPaymentDescriptionGenerator _paymentDescriptionGenerator;
         private ICheckoutMetaDataFactory _checkoutMetaDataFactory;
         private IOrderRepository _orderRepository;
-        private ServiceAccessor<HttpContextBase> _httpContextAccessor;
         private HttpClient _httpClient;
+        private IHttpContextAccessor _httpContextAccessor;
         private ProcessPaymentCheckout _processCheckout;
         private IMolliePaymentClient _molliePaymentClient;
         private IOrderNoteHelper _orderNoteHelper;
@@ -128,23 +128,20 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             A.CallTo(() =>
                     _molliePaymentClient.CreatePaymentAsync(
                         A<PaymentRequest>.That.Matches(x => x.Amount.Value == Amount.ToString("0.00", CultureInfo.InvariantCulture) && x.Amount.Currency == CurrencyCode),
-                        A<string>._,
-                        A<HttpClient>._))
+                        A<string>._))
                 .MustHaveHappened();
 
             A.CallTo(() =>
                     _molliePaymentClient.CreatePaymentAsync(
                         A<PaymentRequest>.That.Matches(x => x.Description == PaymentDescription),
-                        A<string>._,
-                        A<HttpClient>._))
+                        A<string>._))
                 .MustHaveHappened();
 
             var redirectUrl = RedirectUrl + $"?orderNumber={OrderNumber}";
             A.CallTo(() =>
                     _molliePaymentClient.CreatePaymentAsync(
                         A<PaymentRequest>.That.Matches(x => x.RedirectUrl == redirectUrl),
-                        A<string>._,
-                        A<HttpClient>._))
+                        A<string>._))
                 .MustHaveHappened();
 
             var urlBuilder = new UriBuilder(WebShopUrl)
@@ -156,15 +153,13 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             A.CallTo(() =>
                     _molliePaymentClient.CreatePaymentAsync(
                         A<PaymentRequest>.That.Matches(x => x.WebhookUrl == webhookUrl),
-                        A<string>._,
-                        A<HttpClient>._))
+                        A<string>._))
                 .MustHaveHappened();
 
             A.CallTo(() =>
                     _molliePaymentClient.CreatePaymentAsync(
                         A<PaymentRequest>.That.Matches(x => x.Locale == new CultureInfo(Language).TextInfo.CultureName),
-                        A<string>._,
-                        A<HttpClient>._))
+                        A<string>._))
                 .MustHaveHappened();
         }
 
@@ -212,13 +207,13 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
             _paymentDescriptionGenerator = A.Fake<IPaymentDescriptionGenerator>();
             _checkoutMetaDataFactory = A.Fake<ICheckoutMetaDataFactory>();
             _orderRepository = A.Fake<IOrderRepository>();
-            _httpContextAccessor = A.Fake<ServiceAccessor<HttpContextBase>>();
+            _httpContextAccessor = A.Fake<IHttpContextAccessor>();
             _httpClient = A.Fake<HttpClient>();
             _molliePaymentClient = A.Fake<IMolliePaymentClient>();
             _orderNoteHelper = A.Fake<IOrderNoteHelper>();
 
-            var httpContext = new HttpContext(new HttpRequest(null, WebShopUrl, null), new HttpResponse(null));
-            A.CallTo(() => _httpContextAccessor.Invoke()).Returns(new HttpContextWrapper(httpContext));
+            var httpContext = A.Fake<HttpContext>();
+            A.CallTo(() => _httpContextAccessor.HttpContext).Returns(httpContext);
 
             A.CallTo(() => _paymentDescriptionGenerator.GetDescription(A<IOrderGroup>._, A<IPayment>._))
                 .Returns(PaymentDescription);
@@ -232,7 +227,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
                 });
 
             A.CallTo(() =>
-                    _molliePaymentClient.CreatePaymentAsync(A<PaymentRequest>._, A<string>.Ignored, A<HttpClient>._))
+                    _molliePaymentClient.CreatePaymentAsync(A<PaymentRequest>._, A<string>.Ignored))
                 .Returns(Task.FromResult(new PaymentResponse
                 {
                     Id = PaymentResponseId,
@@ -246,7 +241,7 @@ namespace Mollie.Checkout.Tests.ProcessCheckout
                 _checkoutMetaDataFactory,
                 _orderRepository,
                 _httpContextAccessor,
-                _httpClient,
+
                 _molliePaymentClient,
                 _orderNoteHelper);
 

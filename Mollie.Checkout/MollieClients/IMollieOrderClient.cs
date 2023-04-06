@@ -8,12 +8,10 @@ namespace Mollie.Checkout.MollieClients
     {
         Task<OrderResponse> CreateOrderAsync(
             OrderRequest orderRequest,
-            string apiKey,
-            HttpClient httpClient);
+            string apiKey);
 
         Task<OrderResponse> GetOrderAsync(
             string orderId,
-            string apiKey,
-            HttpClient httpClient);
+            string apiKey);
     }
 }

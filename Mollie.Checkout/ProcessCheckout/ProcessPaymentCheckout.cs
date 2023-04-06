@@ -7,7 +7,6 @@ using EPiServer.Security;
 using EPiServer.ServiceLocation;
 using Mediachase.Commerce.Security;
 using Mollie.Checkout.Services;
-using System.Web;
 using System.Net.Http;
 using Mollie.Api.Models.Payment.Request;
 using Mollie.Api.Models;
@@ -15,6 +14,8 @@ using Mollie.Checkout.Services.Interfaces;
 using Mollie.Api.Models.Payment;
 using Mollie.Api.Models.Payment.Response;
 using Mollie.Checkout.MollieClients;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Extensions;
 
 namespace Mollie.Checkout.ProcessCheckout
 {
@@ -25,8 +26,8 @@ namespace Mollie.Checkout.ProcessCheckout
         private readonly IPaymentDescriptionGenerator _paymentDescriptionGenerator;
         private readonly ICheckoutMetaDataFactory _checkoutMetaDataFactory;
         private readonly IOrderRepository _orderRepository;
-        private readonly ServiceAccessor<HttpContextBase> _httpContextAccessor;
-        private readonly HttpClient _httpClient;
+        private readonly IHttpContextAccessor _httpContextAccessor;
+        //private readonly HttpClient _httpClient;
         private readonly IMolliePaymentClient _molliePaymentClient;
         private readonly IOrderNoteHelper _orderNoteHelper;
 
@@ -37,8 +38,8 @@ namespace Mollie.Checkout.ProcessCheckout
             _paymentDescriptionGenerator = ServiceLocator.Current.GetInstance<IPaymentDescriptionGenerator>();
             _checkoutMetaDataFactory = ServiceLocator.Current.GetInstance<ICheckoutMetaDataFactory>();
             _orderRepository = ServiceLocator.Current.GetInstance<IOrderRepository>();
-            _httpContextAccessor = ServiceLocator.Current.GetInstance<ServiceAccessor<HttpContextBase>>();
-            _httpClient = ServiceLocator.Current.GetInstance<HttpClient>();
+            _httpContextAccessor = ServiceLocator.Current.GetInstance<IHttpContextAccessor>();
+            //_httpClient = ServiceLocator.Current.GetInstance<HttpClient>();
             _molliePaymentClient = ServiceLocator.Current.GetInstance<IMolliePaymentClient>();
             _orderNoteHelper = ServiceLocator.Current.GetInstance<IOrderNoteHelper>();
         }
@@ -49,8 +50,8 @@ namespace Mollie.Checkout.ProcessCheckout
             IPaymentDescriptionGenerator paymentDescriptionGenerator,
             ICheckoutMetaDataFactory checkoutMetaDataFactory,
             IOrderRepository orderRepository,
-            ServiceAccessor<HttpContextBase> httpContextAccessor,
-            HttpClient httpClient,
+            IHttpContextAccessor httpContextAccessor,
+            //HttpClient httpClient,
             IMolliePaymentClient molliePaymentClient,
             IOrderNoteHelper orderNoteHelper)
         {
@@ -60,7 +61,7 @@ namespace Mollie.Checkout.ProcessCheckout
             _checkoutMetaDataFactory = checkoutMetaDataFactory;
             _orderRepository = orderRepository;
             _httpContextAccessor = httpContextAccessor;
-            _httpClient = httpClient;
+            //_httpClient = httpClient;
             _molliePaymentClient = molliePaymentClient;
             _orderNoteHelper = orderNoteHelper;
         }
@@ -74,8 +75,9 @@ namespace Mollie.Checkout.ProcessCheckout
                 throw new CultureNotFoundException("Unable to get payment language.");
             }
 
-            var request = _httpContextAccessor().Request;
-            var baseUrl = $"{request.Url.Scheme}://{request.Url.Authority}";
+            var request = _httpContextAccessor?.HttpContext?.Request;
+
+            var baseUrl = $"{request.Scheme}://{request.Host.Value}";
 
             var urlBuilder = new UriBuilder(baseUrl)
             {
@@ -156,7 +158,7 @@ namespace Mollie.Checkout.ProcessCheckout
 
             try
             {
-                paymentResponse = _molliePaymentClient.CreatePaymentAsync(paymentRequest, checkoutConfiguration.ApiKey, _httpClient).GetAwaiter().GetResult();
+                paymentResponse = _molliePaymentClient.CreatePaymentAsync(paymentRequest, checkoutConfiguration.ApiKey).GetAwaiter().GetResult();
 
             }
             catch (Exception e)
